@@ -1,12 +1,12 @@
-defmodule Adventofcode.Q1 do
+defmodule AOC.Q1 do
   def part1 do
-    Adventofcode.Input.read!(2018, 1)
+    AOC.Input.read!(2018, 1)
     |> String.split
     |> calc()
   end
 
   def part2 do
-    Adventofcode.Input.read!(2018, 1)
+    AOC.Input.read!(2018, 1)
     |> String.split
     |> Stream.cycle
     |> Enum.reduce(%{current: 0, history: %{}}, fn x, %{current: current, history: history} ->
