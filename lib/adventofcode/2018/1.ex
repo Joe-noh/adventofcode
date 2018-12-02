@@ -1,12 +1,12 @@
 defmodule Adventofcode.Q1 do
   def part1 do
-    input()
+    Adventofcode.Input.read!(2018, 1)
     |> String.split
     |> calc()
   end
 
   def part2 do
-    input()
+    Adventofcode.Input.read!(2018, 1)
     |> String.split
     |> Stream.cycle
     |> Enum.reduce(%{current: 0, history: %{}}, fn x, %{current: current, history: history} ->
@@ -35,8 +35,4 @@ defmodule Adventofcode.Q1 do
 
   defp add("+" <> num, freq), do: freq + String.to_integer(num)
   defp add("-" <> num, freq), do: freq - String.to_integer(num)
-
-  defp input do
-    File.read!("priv/inputs/2018/1.txt")
-  end
 end
