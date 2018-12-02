@@ -26,7 +26,7 @@ defmodule Day1 do
   end
 
   defp input do
-    Path.join([__DIR__, "input"]) |> File.read!
+    File.read!("priv/inputs/2018/1.txt")
   end
 end
 
