@@ -1,4 +1,4 @@
-defmodule AOC.Q2 do
+defmodule AOC2018.Q2 do
   def part1 do
     %{2 => count2, 3 => count3} =
       AOC.Input.read!(2018, 2)

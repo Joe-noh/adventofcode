@@ -1,4 +1,4 @@
-defmodule AOC.Q3 do
+defmodule AOC2018.Q3 do
   def part1 do
     AOC.Input.stream!(2018, 3)
     |> Stream.map(&split_parts/1)

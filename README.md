@@ -1,5 +1,5 @@
 # AOC
 
 ```console
-$ mix run -e 'IO.puts AOC.Q1.p1'
+$ mix run -e 'IO.puts AOC2018.Q1.p1'
 ```
