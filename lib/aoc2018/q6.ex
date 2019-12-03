@@ -1,4 +1,4 @@
-defmodule AOC.Q6 do
+defmodule AOC2018.Q6 do
   def part1 do
     coordinates = input_coordinates()
     {{min_x, min_y}, {max_x, max_y}} = search_area(coordinates)

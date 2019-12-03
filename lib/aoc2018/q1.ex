@@ -1,4 +1,4 @@
-defmodule AOC.Q1 do
+defmodule AOC2018.Q1 do
   def p1 do
     AOC.Input.stream!(2018, 1)
     |> Stream.map(&parse_int/1)

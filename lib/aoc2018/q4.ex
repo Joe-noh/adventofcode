@@ -1,4 +1,4 @@
-defmodule AOC.Q4 do
+defmodule AOC2018.Q4 do
   def part1 do
     {count_map, total_time_map} =
       AOC.Input.stream!(2018, 4)

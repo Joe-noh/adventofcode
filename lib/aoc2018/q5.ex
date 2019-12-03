@@ -1,4 +1,4 @@
-defmodule AOC.Q5 do
+defmodule AOC2018.Q5 do
   def part1 do
     input_codepoints()
     |> react()
