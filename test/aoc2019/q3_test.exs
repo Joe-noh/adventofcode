@@ -1,7 +1,7 @@
 defmodule AOC2019.Q3Test do
   use ExUnit.Case, async: true
 
-  describe "p1" do
+  describe "part 1" do
     test "example 1" do
       ops_list = [
         ~w[U7 R6 D4 L4],
@@ -29,12 +29,12 @@ defmodule AOC2019.Q3Test do
       assert 135 == AOC2019.Q3.p1(ops_list)
     end
 
-    test "puts", context do
-      AOC2019.Q3.input() |> AOC2019.Q3.p1() |> TestHelpers.puts(context)
+    test "solve" do
+      assert AOC2019.Q3.input() |> AOC2019.Q3.p1() == 266
     end
   end
 
-  describe  "p2" do
+  describe  "part 2" do
     test "example 1" do
       ops_list = [
         ~w[U7 R6 D4 L4],
@@ -62,8 +62,8 @@ defmodule AOC2019.Q3Test do
       assert 410 == AOC2019.Q3.p2(ops_list)
     end
 
-    test "puts", context do
-      AOC2019.Q3.input() |> AOC2019.Q3.p2() |> TestHelpers.puts(context)
+    test "solve" do
+      assert 19242 == AOC2019.Q3.input() |> AOC2019.Q3.p2()
     end
   end
 end

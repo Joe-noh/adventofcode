@@ -1,19 +1,19 @@
 defmodule AOC2019.Q4Test do
   use ExUnit.Case, async: true
 
-  describe "p1" do
-    test "puts", context do
+  describe "part 1" do
+    test "solve" do
       [from, to] = input()
 
-      AOC2019.Q4.p1(from, to) |> TestHelpers.puts(context)
+      assert AOC2019.Q4.p1(from, to) == 960
     end
   end
 
-  describe "p2" do
-    test "puts", context do
+  describe "part 2" do
+    test "solve" do
       [from, to] = input()
 
-      AOC2019.Q4.p2(from, to) |> TestHelpers.puts(context)
+      assert AOC2019.Q4.p2(from, to) == 626
     end
   end
 
