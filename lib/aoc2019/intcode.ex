@@ -31,27 +31,53 @@ defmodule AOC2019.Intcode do
 
   defp do_calc(state = %{map: map, pointer: pointer, input: input}) do
     case next_operation(state) do
-      {1, mode1, mode2, _mode3, [arg1, arg2, output_pos]} ->
+      {1, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
         value = mode_value(map, mode1, arg1) + mode_value(map, mode2, arg2)
         map = Map.put(map, output_pos, value)
 
-        do_calc(%__MODULE__{state | map: map, pointer: pointer + 4})
+        do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
 
-      {2, mode1, mode2, _mode3, [arg1, arg2, output_pos]} ->
+      {2, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
         value = mode_value(map, mode1, arg1) * mode_value(map, mode2, arg2)
         map = Map.put(map, output_pos, value)
 
-        do_calc(%__MODULE__{state | map: map, pointer: pointer + 4})
+        do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
 
-      {3, _mode1, _mode2, _mode3, [output_pos]} ->
+      {3, _mode1, _mode2, _mode3, args = [output_pos]} ->
         map = Map.put(map, output_pos, input)
 
-        do_calc(%__MODULE__{state | map: map, pointer: pointer + 2})
+        do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
 
-      {4, mode1, _mode2, _mode3, [arg1]} ->
+      {4, mode1, _mode2, _mode3, args = [arg1]} ->
         case mode_value(map, mode1, arg1) do
-          0 -> do_calc(%__MODULE__{state | map: map, pointer: pointer + 2})
+          0 -> do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
           answer -> answer
+        end
+
+      {5, mode1, mode2, _mode3, args = [arg1, output_pos]} ->
+        case mode_value(map, mode1, arg1) do
+          0 -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1})
+          _ -> do_calc(%__MODULE__{state | map: map, pointer: mode_value(map, mode2, output_pos)})
+        end
+
+      {6, mode1, mode2, _mode3, args = [arg1, output_pos]} ->
+        case mode_value(map, mode1, arg1) do
+          0 -> do_calc(%__MODULE__{state | map: map, pointer: mode_value(map, mode2, output_pos)})
+          _ -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1})
+        end
+
+      {7, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
+        if mode_value(map, mode1, arg1) < mode_value(map, mode2, arg2) do
+          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 1), pointer: pointer + length(args) + 1})
+        else
+          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 0), pointer: pointer + length(args) + 1})
+        end
+
+      {8, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
+        if mode_value(map, mode1, arg1) == mode_value(map, mode2, arg2) do
+          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 1), pointer: pointer + length(args) + 1})
+        else
+          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 0), pointer: pointer + length(args) + 1})
         end
 
       {99, _, _, _, []} ->
@@ -76,6 +102,10 @@ defmodule AOC2019.Intcode do
   defp arguments(2, map, pointer), do: fetch_arguments(3, map, pointer)
   defp arguments(3, map, pointer), do: fetch_arguments(1, map, pointer)
   defp arguments(4, map, pointer), do: fetch_arguments(1, map, pointer)
+  defp arguments(5, map, pointer), do: fetch_arguments(2, map, pointer)
+  defp arguments(6, map, pointer), do: fetch_arguments(2, map, pointer)
+  defp arguments(7, map, pointer), do: fetch_arguments(3, map, pointer)
+  defp arguments(8, map, pointer), do: fetch_arguments(3, map, pointer)
   defp arguments(99, _map, _pointer), do: []
 
   defp fetch_arguments(n, map, pointer) do

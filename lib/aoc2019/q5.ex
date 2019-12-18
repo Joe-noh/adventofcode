@@ -5,6 +5,10 @@ defmodule AOC2019.Q5 do
     input() |> Intcode.new() |> Intcode.input(1) |> Intcode.calc()
   end
 
+  def p2 do
+    input() |> Intcode.new() |> Intcode.input(5) |> Intcode.calc()
+  end
+
   defp input() do
     AOC.Input.read!(2019, 5)
     |> String.split(",")
