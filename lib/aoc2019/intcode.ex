@@ -25,8 +25,12 @@ defmodule AOC2019.Intcode do
     %__MODULE__{struct | map: map}
   end
 
-  def input(struct, input) do
+  def input(struct, input) when is_list(input) do
     %__MODULE__{struct | input: input}
+  end
+
+  def input(struct, input) do
+    %__MODULE__{struct | input: [input]}
   end
 
   defp do_calc(state = %{map: map, pointer: pointer, input: input}) do
@@ -44,9 +48,10 @@ defmodule AOC2019.Intcode do
         do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
 
       {3, _mode1, _mode2, _mode3, args = [output_pos]} ->
-        map = Map.put(map, output_pos, input)
+        [input_value | input] = input
+        map = Map.put(map, output_pos, input_value)
 
-        do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
+        do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1, input: input})
 
       {4, mode1, _mode2, _mode3, args = [arg1]} ->
         case mode_value(map, mode1, arg1) do
