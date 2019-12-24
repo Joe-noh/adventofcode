@@ -1,8 +1,8 @@
 defmodule AOC2019.Intcode do
-  defstruct [:map, :pointer, :input, :relative_base]
+  defstruct [:map, :pointer, :inputs, :outputs, :relative_base]
 
   def new(codes) do
-    %__MODULE__{map: code_map(codes), pointer: 0, input: [], relative_base: 0}
+    %__MODULE__{map: code_map(codes), pointer: 0, inputs: [], outputs: [], relative_base: 0}
   end
 
   defp code_map(codes) do
@@ -25,38 +25,41 @@ defmodule AOC2019.Intcode do
     %__MODULE__{struct | map: map}
   end
 
-  def input(struct, input) when is_list(input) do
-    %__MODULE__{struct | input: input}
+  def input(struct, inputs) when is_list(inputs) do
+    %__MODULE__{struct | inputs: inputs}
   end
 
   def input(struct, input) do
-    %__MODULE__{struct | input: [input]}
+    %__MODULE__{struct | inputs: [input]}
   end
 
-  defp do_calc(state = %{map: map, pointer: pointer, input: input, relative_base: relative_base}) do
+  defp do_calc(state = %{map: map, pointer: pointer, inputs: inputs, outputs: outputs, relative_base: relative_base}) do
     case next_operation(state) do
-      {1, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
+      {1, mode1, mode2, mode3, args = [arg1, arg2, output_pos]} ->
         value = mode_value(state, mode1, arg1) + mode_value(state, mode2, arg2)
-        map = Map.put(map, output_pos, value)
+        address = mode_value(state, mode3, output_pos)
+        map = Map.put(map, address, value)
 
         do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
 
-      {2, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
+      {2, mode1, mode2, mode3, args = [arg1, arg2, output_pos]} ->
         value = mode_value(state, mode1, arg1) * mode_value(state, mode2, arg2)
-        map = Map.put(map, output_pos, value)
+        address = mode_value(state, mode3, output_pos)
+        map = Map.put(map, address, value)
 
         do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
 
-      {3, _mode1, _mode2, _mode3, args = [output_pos]} ->
-        [input_value | input] = input
-        map = Map.put(map, output_pos, input_value)
+      {3, mode1, _mode2, _mode3, args = [output_pos]} ->
+        [input_value | inputs] = inputs
+        address = mode_value(state, mode1, output_pos)
+        map = Map.put(map, address, input_value)
 
-        do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1, input: input})
+        do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1, inputs: inputs})
 
       {4, mode1, _mode2, _mode3, args = [arg1]} ->
         case mode_value(state, mode1, arg1) do
           0 -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1})
-          answer -> answer
+          output -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1, outputs: [output | outputs]})
         end
 
       {5, mode1, mode2, _mode3, args = [arg1, output_pos]} ->
@@ -71,37 +74,37 @@ defmodule AOC2019.Intcode do
           _ -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1})
         end
 
-      {7, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
-        if mode_value(state, mode1, arg1) < mode_value(state, mode2, arg2) do
-          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 1), pointer: pointer + length(args) + 1})
-        else
-          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 0), pointer: pointer + length(args) + 1})
-        end
+      {7, mode1, mode2, mode3, args = [arg1, arg2, output_pos]} ->
+        address = mode_value(state, mode3, output_pos)
+        value = if mode_value(state, mode1, arg1) < mode_value(state, mode2, arg2), do: 1, else: 0
 
-      {8, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
-        if mode_value(state, mode1, arg1) == mode_value(state, mode2, arg2) do
-          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 1), pointer: pointer + length(args) + 1})
-        else
-          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 0), pointer: pointer + length(args) + 1})
-        end
+        do_calc(%__MODULE__{state | map: Map.put(map, address, value), pointer: pointer + length(args) + 1})
+
+      {8, mode1, mode2, mode3, args = [arg1, arg2, output_pos]} ->
+        address = mode_value(state, mode3, output_pos)
+        value = if mode_value(state, mode1, arg1) == mode_value(state, mode2, arg2), do: 1, else: 0
+
+        do_calc(%__MODULE__{state | map: Map.put(map, address, value), pointer: pointer + length(args) + 1})
 
       {9, mode1, _mode2, _mode3, args = [arg1]} ->
         relative_base = relative_base + mode_value(state, mode1, arg1)
         do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1, relative_base: relative_base})
 
       {99, _, _, _, []} ->
-        Map.get(map, 0)
+        case outputs do
+          [output | _] ->
+            IO.inspect {output, Map.get(map, 0)}
+
+          [] -> Map.get(map, 0)
+        end
     end
   end
 
   defp next_operation(%{map: map, pointer: pointer}) do
     op = Map.get(map, pointer, 0)
 
-    mode3 = div(op, 10000)
-    mode2 = div(rem(op, 10000), 1000)
-    mode1 = div(rem(op, 1000), 100)
-    opcode = rem(op, 100)
-
+    [_, mode3, mode2, mode1 | opcode] = Integer.digits(op + 100000)
+    opcode = Integer.undigits(opcode)
     args = arguments(opcode, map, pointer)
 
     {opcode, mode1, mode2, mode3, args}
