@@ -1,8 +1,8 @@
 defmodule AOC2019.Intcode do
-  defstruct [:map, :pointer, :input, :relative_base]
+  defstruct [:map, :pointer, :inputs, :outputs, :relative_base]
 
   def new(codes) do
-    %__MODULE__{map: code_map(codes), pointer: 0, input: [], relative_base: 0}
+    %__MODULE__{map: code_map(codes), pointer: 0, inputs: [], outputs: [], relative_base: 0}
   end
 
   defp code_map(codes) do
@@ -25,83 +25,84 @@ defmodule AOC2019.Intcode do
     %__MODULE__{struct | map: map}
   end
 
-  def input(struct, input) when is_list(input) do
-    %__MODULE__{struct | input: input}
+  def input(struct, inputs) when is_list(inputs) do
+    %__MODULE__{struct | inputs: inputs}
   end
 
   def input(struct, input) do
-    %__MODULE__{struct | input: [input]}
+    %__MODULE__{struct | inputs: [input]}
   end
 
-  defp do_calc(state = %{map: map, pointer: pointer, input: input, relative_base: relative_base}) do
+  defp do_calc(state = %{map: map, pointer: pointer, inputs: inputs, outputs: outputs, relative_base: relative_base}) do
     case next_operation(state) do
-      {1, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
-        value = mode_value(state, mode1, arg1) + mode_value(state, mode2, arg2)
-        map = Map.put(map, output_pos, value)
+      {1, mode1, mode2, mode3, args = [arg1, arg2, output_pos]} ->
+        value = fetch_value(state, mode1, arg1) + fetch_value(state, mode2, arg2)
+        address = fetch_address(state, mode3, output_pos)
+        map = Map.put(map, address, value)
 
         do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
 
-      {2, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
-        value = mode_value(state, mode1, arg1) * mode_value(state, mode2, arg2)
-        map = Map.put(map, output_pos, value)
+      {2, mode1, mode2, mode3, args = [arg1, arg2, output_pos]} ->
+        value = fetch_value(state, mode1, arg1) * fetch_value(state, mode2, arg2)
+        address = fetch_address(state, mode3, output_pos)
+        map = Map.put(map, address, value)
 
         do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1})
 
-      {3, _mode1, _mode2, _mode3, args = [output_pos]} ->
-        [input_value | input] = input
-        map = Map.put(map, output_pos, input_value)
+      {3, mode1, _mode2, _mode3, args = [output_pos]} ->
+        [input_value | inputs] = inputs
+        address = fetch_address(state, mode1, output_pos)
+        map = Map.put(map, address, input_value)
 
-        do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1, input: input})
+        do_calc(%__MODULE__{state | map: map, pointer: pointer + length(args) + 1, inputs: inputs})
 
       {4, mode1, _mode2, _mode3, args = [arg1]} ->
-        case mode_value(state, mode1, arg1) do
+        case fetch_value(state, mode1, arg1) do
           0 -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1})
-          answer -> answer
+          output -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1, outputs: [output | outputs]})
         end
 
       {5, mode1, mode2, _mode3, args = [arg1, output_pos]} ->
-        case mode_value(state, mode1, arg1) do
+        case fetch_value(state, mode1, arg1) do
           0 -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1})
-          _ -> do_calc(%__MODULE__{state | pointer: mode_value(state, mode2, output_pos)})
+          _ -> do_calc(%__MODULE__{state | pointer: fetch_value(state, mode2, output_pos)})
         end
 
       {6, mode1, mode2, _mode3, args = [arg1, output_pos]} ->
-        case mode_value(state, mode1, arg1) do
-          0 -> do_calc(%__MODULE__{state | pointer: mode_value(state, mode2, output_pos)})
+        case fetch_value(state, mode1, arg1) do
+          0 -> do_calc(%__MODULE__{state | pointer: fetch_value(state, mode2, output_pos)})
           _ -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1})
         end
 
-      {7, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
-        if mode_value(state, mode1, arg1) < mode_value(state, mode2, arg2) do
-          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 1), pointer: pointer + length(args) + 1})
-        else
-          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 0), pointer: pointer + length(args) + 1})
-        end
+      {7, mode1, mode2, mode3, args = [arg1, arg2, output_pos]} ->
+        address = fetch_address(state, mode3, output_pos)
+        value = if fetch_value(state, mode1, arg1) < fetch_value(state, mode2, arg2), do: 1, else: 0
 
-      {8, mode1, mode2, _mode3, args = [arg1, arg2, output_pos]} ->
-        if mode_value(state, mode1, arg1) == mode_value(state, mode2, arg2) do
-          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 1), pointer: pointer + length(args) + 1})
-        else
-          do_calc(%__MODULE__{state | map: Map.put(map, output_pos, 0), pointer: pointer + length(args) + 1})
-        end
+        do_calc(%__MODULE__{state | map: Map.put(map, address, value), pointer: pointer + length(args) + 1})
+
+      {8, mode1, mode2, mode3, args = [arg1, arg2, output_pos]} ->
+        address = fetch_address(state, mode3, output_pos)
+        value = if fetch_value(state, mode1, arg1) == fetch_value(state, mode2, arg2), do: 1, else: 0
+
+        do_calc(%__MODULE__{state | map: Map.put(map, address, value), pointer: pointer + length(args) + 1})
 
       {9, mode1, _mode2, _mode3, args = [arg1]} ->
-        relative_base = relative_base + mode_value(state, mode1, arg1)
+        relative_base = relative_base + fetch_value(state, mode1, arg1)
         do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1, relative_base: relative_base})
 
       {99, _, _, _, []} ->
-        Map.get(map, 0)
+        case outputs do
+          [output | _] -> output
+          [] -> Map.get(map, 0)
+        end
     end
   end
 
   defp next_operation(%{map: map, pointer: pointer}) do
     op = Map.get(map, pointer, 0)
 
-    mode3 = div(op, 10000)
-    mode2 = div(rem(op, 10000), 1000)
-    mode1 = div(rem(op, 1000), 100)
-    opcode = rem(op, 100)
-
+    [_, mode3, mode2, mode1 | opcode] = Integer.digits(op + 100000)
+    opcode = Integer.undigits(opcode)
     args = arguments(opcode, map, pointer)
 
     {opcode, mode1, mode2, mode3, args}
@@ -122,7 +123,12 @@ defmodule AOC2019.Intcode do
     Enum.map(1..n, fn i -> Map.get(map, pointer + i, 0) end)
   end
 
-  defp mode_value(%{map: map}, 0, arg), do: Map.get(map, arg, 0)
-  defp mode_value(_state, 1, arg), do: arg
-  defp mode_value(%{map: map, relative_base: base}, 2, arg), do: Map.get(map, arg, 0) + base
+  defp fetch_value(_state, 1, value), do: value
+  defp fetch_value(state = %{map: map}, mode, pointer) do
+    address = fetch_address(state, mode, pointer)
+    Map.get(map, address, 0)
+  end
+
+  defp fetch_address(%{relative_base: base}, 2, pointer), do: pointer + base
+  defp fetch_address(_state, _mode, pointer), do: pointer
 end

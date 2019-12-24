@@ -26,14 +26,11 @@ defmodule AOC2019.Q8 do
   defp print_image(pixels, width) do
     pixels
     |> Enum.chunk_every(width)
-    |> Enum.each(fn row ->
-      Enum.each(row, fn pixel ->
-        case pixel do
-          "0" -> IO.write(" ")
-          _ -> IO.write("X")
-        end
-      end)
-      IO.puts ""
+    |> Enum.map(fn row ->
+      row
+      |> Enum.map(fn x -> if x == "0", do: " ", else: "X" end)
+      |> Enum.join()
     end)
+    |> Enum.join("\n")
   end
 end
