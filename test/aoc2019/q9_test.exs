@@ -14,9 +14,8 @@ defmodule AOC2019.Q9Test do
       assert AOC2019.Q9.p1(codes) == 1125899906842624
     end
 
-    @tag skip: "something incorrect"
     test "solve" do
-       input() |> AOC2019.Q9.p1()
+       assert input() |> AOC2019.Q9.p1() == 3380552333
     end
   end
 
