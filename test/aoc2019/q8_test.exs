@@ -9,7 +9,16 @@ defmodule AOC2019.Q8Test do
 
   describe "part 2" do
     test "solve" do
-      input() |> AOC2019.Q8.p2()
+      expected = Enum.join([
+        "XXXX X  X  XX  X  X X    ",
+        "X    X X  X  X X  X X    ",
+        "XXX  XX   X  X XXXX X    ",
+        "X    X X  XXXX X  X X    ",
+        "X    X X  X  X X  X X    ",
+        "X    X  X X  X X  X XXXX ",
+      ], "\n")
+
+      assert input() |> AOC2019.Q8.p2() == expected
     end
   end
 
