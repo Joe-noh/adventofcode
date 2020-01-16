@@ -2,7 +2,7 @@ defmodule AOC2019.Q2 do
   alias AOC2019.Intcode
 
   def p1 do
-    input() |> Intcode.new() |> Intcode.replace({12, 2}) |> Intcode.calc()
+    input() |> Intcode.new() |> Intcode.replace({12, 2}) |> Intcode.calc_until_halt() |> Intcode.head()
   end
 
   def p2 do
@@ -12,7 +12,7 @@ defmodule AOC2019.Q2 do
     pairs = for month <- 0..99, day <- 0..99, into: [], do: {month, day}
 
     {noun, verb} = Enum.find(pairs, fn pair ->
-      19690720 == Intcode.new(codes) |> Intcode.replace(pair) |> Intcode.calc()
+      19690720 == Intcode.new(codes) |> Intcode.replace(pair) |> Intcode.calc_until_halt() |> Intcode.head()
     end)
 
     noun * 100 + verb

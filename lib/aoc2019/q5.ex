@@ -2,11 +2,21 @@ defmodule AOC2019.Q5 do
   alias AOC2019.Intcode
 
   def p1 do
-    input() |> Intcode.new() |> Intcode.input(1) |> Intcode.calc()
+    input()
+    |> Intcode.new()
+    |> Intcode.input(1)
+    |> Intcode.calc_until_halt()
+    |> Intcode.outputs()
+    |> hd()
   end
 
   def p2 do
-    input() |> Intcode.new() |> Intcode.input(5) |> Intcode.calc()
+    input()
+    |> Intcode.new()
+    |> Intcode.input(5)
+    |> Intcode.calc_until_halt()
+    |> Intcode.outputs()
+    |> hd()
   end
 
   defp input() do

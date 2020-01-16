@@ -6,7 +6,13 @@ defmodule AOC2019.Q7 do
     |> permutations()
     |> Enum.map(fn phases ->
       Enum.reduce(phases, 0, fn (phase, input) ->
-        Intcode.new(ops_list) |> Intcode.input([phase, input]) |> Intcode.calc()
+        Intcode.new(ops_list)
+        |> Intcode.input([phase, input])
+        |> Intcode.calc_until_output()
+        |> case do
+          {:output, output, _} -> output
+          {:halt, _} -> 0
+        end
       end)
     end)
     |> Enum.max()

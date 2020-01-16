@@ -12,8 +12,15 @@ defmodule AOC2019.Intcode do
     |> Enum.into(%{})
   end
 
-  def calc(struct) do
-    struct |> do_calc()
+  def calc_until_halt(struct) do
+    case do_calc(struct) do
+      {:output, _, struct} -> calc_until_halt(struct)
+      {:halt, struct} -> struct
+    end
+  end
+
+  def calc_until_output(struct) do
+    do_calc(struct)
   end
 
   def replace(struct = %{map: map}, {month, day}) do
@@ -31,6 +38,14 @@ defmodule AOC2019.Intcode do
 
   def input(struct, input) do
     %__MODULE__{struct | inputs: [input]}
+  end
+
+  def outputs(struct) do
+    struct.outputs
+  end
+
+  def head(%{map: map}) do
+    Map.get(map, 0)
   end
 
   defp do_calc(state = %{map: map, pointer: pointer, inputs: inputs, outputs: outputs, relative_base: relative_base}) do
@@ -59,7 +74,7 @@ defmodule AOC2019.Intcode do
       {4, mode1, _mode2, _mode3, args = [arg1]} ->
         case fetch_value(state, mode1, arg1) do
           0 -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1})
-          output -> do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1, outputs: [output | outputs]})
+          output -> {:output, output, %__MODULE__{state | pointer: pointer + length(args) + 1, outputs: [output | outputs]}}
         end
 
       {5, mode1, mode2, _mode3, args = [arg1, output_pos]} ->
@@ -91,10 +106,7 @@ defmodule AOC2019.Intcode do
         do_calc(%__MODULE__{state | pointer: pointer + length(args) + 1, relative_base: relative_base})
 
       {99, _, _, _, []} ->
-        case outputs do
-          [output | _] -> output
-          [] -> Map.get(map, 0)
-        end
+        {:halt, state}
     end
   end
 
