@@ -1,4 +1,4 @@
-defmodule AOC2020.Q6Test do
+defmodule AOC2020.Q7Test do
   use ExUnit.Case, async: true
 
   describe "part 1" do
